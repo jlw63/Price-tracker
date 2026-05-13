@@ -27,14 +27,17 @@ def scrape(url: str, db: Session = Depends(get_db)):
             # Visit the URL and wait for it to fully load
             page.goto(url, wait_until="networkidle")
             
-            # Try to find the price on PB Tech
+           # Grab the price parts separately and combine them
             price = None
             try:
-                price_element = page.locator(".price, .product-price, [class*='price']").first
-                price = price_element.inner_text()
+                currency = page.locator(".p_currency").first.inner_text()
+                dollars = page.locator(".js-dollar").first.inner_text()
+                cents = page.locator(".js-cent").first.inner_text()
+                price = f"{currency}{dollars}{cents}"
             except:
                 pass
-            
+
+        
             browser.close()
 
         # Save to database
