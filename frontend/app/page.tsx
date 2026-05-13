@@ -38,7 +38,7 @@ export default function Home() {
 {result && (
   <div className="mt-8 bg-gray-800 rounded-xl p-6 w-full max-w-xl">
     <p className="text-gray-400 text-sm mb-1">Current Price</p>
-    <p className="text-4xl font-bold text-green-400">${result.price}</p>
+    <p className="text-4xl font-bold text-green-400">{result.price}</p>
     <p className="text-gray-500 text-sm mt-2">Status: {result.status}</p>
   </div>
 )}

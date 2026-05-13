@@ -35,15 +35,15 @@ def scrape(url: str, db: Session = Depends(get_db)):
             # Visit the URL and wait for it to fully load
             page.goto(url, wait_until="networkidle")
             
-           # Grab the price parts separately and combine them
-            price = None
+            # Grab the price parts separately and combine them
+            price = None 
             try:
-                currency = page.locator(".p_currency").first.inner_text()
-                dollars = page.locator(".js-dollar").first.inner_text()
-                cents = page.locator(".js-cent").first.inner_text()
-                price = f"{currency}{dollars}{cents}"
-            except:
-                pass
+                customer_price = page.locator(".js-customer-price.ginc")
+                dollars = customer_price.locator(".js-dollar").inner_text()
+                cents = customer_price.locator(".js-cent").inner_text()
+                price = f"${dollars}{cents}"
+            except Exception as e:
+                print(f"Price extraction failed: {e}")
 
         
             browser.close()
