@@ -1,12 +1,10 @@
-import requests
-from bs4 import BeautifulSoup
 from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from database import SessionLocal, PriceRecord
+from playwright.sync_api import sync_playwright
 
 app = FastAPI()
 
-# This gives us a database connection for each request
 def get_db():
     db = SessionLocal()
     try:
@@ -21,19 +19,23 @@ def root():
 @app.get("/scrape")
 def scrape(url: str, db: Session = Depends(get_db)):
     try:
-        # Fetch the webpage
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers)
-        
-        # Parse the HTML
-        soup = BeautifulSoup(response.text, "html.parser")
-        
-        # Try to find a price
-        price = None
-        for tag in soup.find_all(True):
-            if any(word in tag.get("class", []) for word in ["price", "Price", "product-price"]):
-                price = tag.get_text(strip=True)
-                break
+        with sync_playwright() as p:
+            # Launch a real browser (invisible)
+            browser = p.chromium.launch(headless=True)
+            page = browser.new_page()
+            
+            # Visit the URL and wait for it to fully load
+            page.goto(url, wait_until="networkidle")
+            
+            # Try to find the price on PB Tech
+            price = None
+            try:
+                price_element = page.locator(".price, .product-price, [class*='price']").first
+                price = price_element.inner_text()
+            except:
+                pass
+            
+            browser.close()
 
         # Save to database
         record = PriceRecord(url=url, price=price)
