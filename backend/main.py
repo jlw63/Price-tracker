@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from database import SessionLocal, PriceRecord
 from playwright.sync_api import sync_playwright
+from tasks import scrape_price
 
 app = FastAPI()
 
@@ -73,3 +74,9 @@ def history(url: str, db: Session = Depends(get_db)):
         {"price": r.price, "scraped_at": r.scraped_at}
         for r in records
     ]
+
+@app.post("/track")
+def track(url: str, db: Session = Depends(get_db)):
+    #queue scrape task in the background
+    scrape_price.delay(url)
+    return {"message" : f"Now tracking {url}"}
